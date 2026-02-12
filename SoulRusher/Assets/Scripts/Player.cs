@@ -2,53 +2,61 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    [SerializeField] private float speed = 5f;
-
-    [Header("Jump Settings")]
-    [SerializeField] private float jumpForce = 15f;
-    [SerializeField] bool isJumping = false;
+    [Header("PlayerMovement Settings")]
+    [SerializeField] float speed = 5f;            
+    [SerializeField] float jumpForce = 9f;
+    [SerializeField] int facingDirection = 1;
+    float moveInputX;                    
 
     [Header("References")]
-    [SerializeField] private Rigidbody2D rb;
-    PlayerController controller;
-
-    [Header("Inputs")]
-    Vector2 moveInput;
+    private Rigidbody2D rb;                          
+    
+    [Header("Ground Check Settings")]
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float checkRadius;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] bool isGrounded = false;
 
     void Awake()
     {
-        controller = new PlayerController();
-        Movement();
+        rb = GetComponent<Rigidbody2D>();                        
     }
 
-    void Movement()
+    void Update()
     {
-        controller.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        controller.Player.Move.canceled += ctx => moveInput = Vector2.zero;
-    }
+        moveInputX = Input.GetAxisRaw("Horizontal");
 
-    void OnEnable()
-    {
-        controller.Player.Enable();
-    }
+        Jump();
 
-    void OnDisable()
-    {
-        controller.Player.Disable();
+        if (moveInputX > 0 && transform.localScale.x < 0 || moveInputX < 0 && transform.localScale.x > 0)
+        {
+            Flip();
+        }
     }
-
-    
-    
 
     void FixedUpdate()
     {
-        Move();
+        Move();                      
     }
 
     void Move()
     {
-        Vector2 move = rb.position + moveInput * speed * Time.deltaTime;
-        rb.MovePosition(move);
+        rb.linearVelocity = new Vector2(moveInputX * speed, rb.linearVelocity.y);
+    }
+
+    void Jump()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
+    }
+
+    void Flip()
+    {
+        facingDirection *= -1;
+        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y,transform.localScale.z);
     }
 }
