@@ -9,18 +9,14 @@ public class Player : MonoBehaviour
     float moveInputX;                    
 
     [Header("References")]
-    private Rigidbody2D rb;                          
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private Animator animator;
     
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float checkRadius;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] bool isGrounded = false;
-
-    void Awake()
-    {
-        rb = GetComponent<Rigidbody2D>();                        
-    }
 
     void Update()
     {
@@ -32,6 +28,8 @@ public class Player : MonoBehaviour
         {
             Flip();
         }
+
+        HandleAnimations();
     }
 
     void FixedUpdate()
@@ -52,6 +50,16 @@ public class Player : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
+    }
+
+    void HandleAnimations()
+    {
+        bool isMoving = Mathf.Abs(moveInputX) > 0.1f && isGrounded;
+
+        animator.SetBool("isIdle",!isMoving && isGrounded);
+        animator.SetBool("isRunning",isMoving && isGrounded);
+
+        animator.SetBool("isJumping",rb.linearVelocity.y > 0.1);
     }
 
     void Flip()
